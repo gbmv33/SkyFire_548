@@ -1731,7 +1731,7 @@ void WorldSession::HandleRequestAccountData(WorldPacket& recvData)
 
     WorldPacket data(SMSG_UPDATE_ACCOUNT_DATA, 8 + 4 + 4 + 4 + destSize);
 
-    ObjectGuid guid;
+    ObjectGuid guid = GetPlayer() ? GetPlayer()->GetGUID() : 0;
 
     data.WriteBits(request.value, 3); // type (0-7)
     data.WriteGuidMask(guid, 5, 1, 3, 7, 0, 4, 2, 6);
