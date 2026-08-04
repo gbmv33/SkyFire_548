@@ -27,10 +27,14 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_SEL_SESSIONKEY, "SELECT a.session_key, a.id, aa.gmlevel  FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE username = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_LOGON, "UPDATE account SET salt = ?, verifier = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_LOGONPROOF, "UPDATE account SET session_key = ?, last_ip = ?, last_login = NOW(), locale = ?, failed_logins = 0, os = ? WHERE username = ?", CONNECTION_SYNCH);
-    PrepareStatement(LOGIN_SEL_LOGONCHALLENGE, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, a.salt, a.verifier, a.token_key FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE a.username = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_UPD_LOGONPROOF_BY_ID, "UPDATE account SET session_key = ?, last_ip = ?, last_login = NOW(), locale = ?, failed_logins = 0, os = ? WHERE id = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_LOGONCHALLENGE, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, a.salt, a.verifier, a.token_key, a.username FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE a.username = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_LOGONCHALLENGE_BY_EMAIL, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, a.salt, a.verifier, a.token_key, a.username FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE LOWER(TRIM(a.email)) = ? OR LOWER(TRIM(a.reg_mail)) = ? ORDER BY a.id LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_LOGON_COUNTRY, "SELECT country FROM ip2nation WHERE ip < ? ORDER BY ip DESC LIMIT 0,1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_FAILEDLOGINS, "UPDATE account SET failed_logins = failed_logins + 1 WHERE username = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_FAILEDLOGINS_BY_ID, "UPDATE account SET failed_logins = failed_logins + 1 WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_SEL_FAILEDLOGINS, "SELECT id, failed_logins FROM account WHERE username = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_FAILEDLOGINS_BY_ID, "SELECT id, failed_logins FROM account WHERE id = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_ACCOUNT_ID_BY_NAME, "SELECT id FROM account WHERE username = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_ACCOUNT_LIST_BY_NAME, "SELECT id, username FROM account WHERE username = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_ACCOUNT_INFO_BY_NAME, "SELECT id, session_key, last_ip, locked, expansion, mutetime, locale, recruiter, os, hasBoost FROM account WHERE username = ? AND session_key IS NOT NULL", CONNECTION_SYNCH);
