@@ -50,6 +50,8 @@ int main()
         ReadFile(std::string(SKYFIRE_SOURCE_DIR) + "/src/server/game/Server/WorldSession.h");
     std::string const characterHandler =
         ReadFile(std::string(SKYFIRE_SOURCE_DIR) + "/src/server/game/Handlers/CharacterHandler.cpp");
+    std::string const pendingSql =
+        ReadFile(std::string(SKYFIRE_SOURCE_DIR) + "/sql/pending_updates/auth/2026_08_04_02_auth_email_login_conversion.sql");
 
     bool passed = true;
     passed &= Expect(Contains(accountMgrHeader, "ConvertToEmailLogin"),
@@ -66,6 +68,10 @@ int main()
         "World sessions should remember whether authentication used an email login.");
     passed &= Expect(Contains(characterHandler, "Convert your login with .account convert email"),
         "Legacy username login should prompt the player to convert.");
+    passed &= Expect(!Contains(pendingSql, "ADD COLUMN IF NOT EXISTS"),
+        "Pending auth SQL should avoid unsupported ALTER TABLE ADD COLUMN IF NOT EXISTS syntax.");
+    passed &= Expect(Contains(pendingSql, "INFORMATION_SCHEMA"),
+        "Pending auth SQL should guard the conversion flag column with an older-MySQL-compatible existence check.");
 
     return passed ? 0 : 1;
 }
