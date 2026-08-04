@@ -992,7 +992,8 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     LoginDatabase.Execute(stmt);
 
     // NOTE ATM the socket is single-threaded, have this in mind ...
-    WorldSession* session = new (std::nothrow) WorldSession(id, this, AccountTypes(security), expansion, mutetime, locale, recruiter, isRecruiter, hasBoost);
+    bool const usedEmailLogin = loginIdentity.Kind == Skyfire::Auth::LoginIdentityKind::Email;
+    WorldSession* session = new (std::nothrow) WorldSession(id, this, AccountTypes(security), expansion, mutetime, locale, recruiter, isRecruiter, hasBoost, usedEmailLogin);
     if (!session)
         return -1;
 

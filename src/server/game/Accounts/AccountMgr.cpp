@@ -123,6 +123,21 @@ namespace
         }
     }
 
+    bool IsEmailLoginAssignedToAnotherAccount(uint32 accountId, std::string const& canonicalEmail)
+    {
+        PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_ACCOUNT_ID_BY_EMAIL_ADDRESS);
+        stmt->setString(0, canonicalEmail);
+        stmt->setString(1, canonicalEmail);
+        stmt->setUInt32(2, accountId);
+        if (LoginDatabase.Query(stmt))
+            return true;
+
+        stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_ACCOUNT_ID_BY_EMAIL_LOGIN_IDENTITY);
+        stmt->setString(0, canonicalEmail);
+        stmt->setUInt32(1, accountId);
+        return bool(LoginDatabase.Query(stmt));
+    }
+
     void RefreshAccountLoginIdentities(
         uint32 accountId,
         std::string const& username,
@@ -366,6 +381,35 @@ AccountOpResult AccountMgr::ChangeRegEmail(uint32 accountId, std::string newEmai
     DeleteEmailLoginIdentities(accountId);
 
     return AccountOpResult::AOR_OK;
+}
+
+AccountOpResult AccountMgr::ConvertToEmailLogin(uint32 accountId, std::string email, std::string newPassword)
+{
+    std::string username;
+
+    if (!GetName(accountId, username))
+        return AccountOpResult::AOR_NAME_NOT_EXIST;
+
+    if (utf8length(email) > MAX_EMAIL_STR)
+        return AccountOpResult::AOR_EMAIL_TOO_LONG;
+
+    if (utf8length(newPassword) > MAX_ACCOUNT_STR)
+        return AccountOpResult::AOR_PASS_TOO_LONG;
+
+    Skyfire::Auth::LoginIdentity loginIdentity = Skyfire::Auth::NormalizeLoginIdentity(email);
+    if (!loginIdentity.Valid || loginIdentity.Kind != Skyfire::Auth::LoginIdentityKind::Email)
+        return AccountOpResult::AOR_EMAIL_INVALID;
+
+    if (IsEmailLoginAssignedToAnotherAccount(accountId, loginIdentity.Canonical))
+        return AccountOpResult::AOR_EMAIL_ALREADY_EXIST;
+
+    PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_UPD_ACCOUNT_EMAIL_LOGIN_CONVERSION);
+    stmt->setString(0, loginIdentity.Original);
+    stmt->setString(1, loginIdentity.Original);
+    stmt->setUInt32(2, accountId);
+    LoginDatabase.DirectExecute(stmt);
+
+    return ChangePassword(accountId, newPassword);
 }
 
 uint32 AccountMgr::GetId(std::string const& username)

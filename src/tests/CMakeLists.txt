@@ -135,6 +135,14 @@ target_compile_definitions(world_auth_identity_tests PRIVATE SKYFIRE_SOURCE_DIR=
 
 add_test(NAME world_auth_identity_tests COMMAND world_auth_identity_tests)
 
+add_executable(account_email_conversion_tests
+  AccountEmailConversionTests.cpp
+)
+
+target_compile_definitions(account_email_conversion_tests PRIVATE SKYFIRE_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}\")
+
+add_test(NAME account_email_conversion_tests COMMAND account_email_conversion_tests)
+
 add_executable(network_address_tests
   ${CMAKE_SOURCE_DIR}/src/server/shared/Utilities/NetworkAddress.cpp
   NetworkAddressTests.cpp

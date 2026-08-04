@@ -62,6 +62,9 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_UPD_USERNAME, "UPDATE account SET username = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_EMAIL, "UPDATE account SET email = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_REG_EMAIL, "UPDATE account SET reg_mail = ? WHERE id = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_UPD_ACCOUNT_EMAIL_LOGIN_CONVERSION, "UPDATE account SET email = ?, reg_mail = ?, email_login_converted = 1 WHERE id = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_ACCOUNT_ID_BY_EMAIL_ADDRESS, "SELECT id FROM account WHERE (LOWER(TRIM(email)) = ? OR LOWER(TRIM(reg_mail)) = ?) AND id <> ? LIMIT 1", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_ACCOUNT_ID_BY_EMAIL_LOGIN_IDENTITY, "SELECT account_id FROM account_login_identity WHERE identity_type = 1 AND identity_canonical = ? AND account_id <> ? LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_REP_ACCOUNT_LOGIN_IDENTITY, "INSERT INTO account_login_identity (account_id, identity_type, identity, identity_canonical, salt, verifier) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE account_id = VALUES(account_id), identity = VALUES(identity), salt = VALUES(salt), verifier = VALUES(verifier), updated_at = CURRENT_TIMESTAMP", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_DEL_ACCOUNT_LOGIN_IDENTITIES, "DELETE FROM account_login_identity WHERE account_id = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_DEL_ACCOUNT_EMAIL_LOGIN_IDENTITIES, "DELETE FROM account_login_identity WHERE account_id = ? AND identity_type = 1", CONNECTION_SYNCH);
