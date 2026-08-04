@@ -29,6 +29,8 @@ int main()
     passed &= Expect(email.Valid, "Email login identity should be valid.");
     passed &= Expect(email.Kind == Skyfire::Auth::LoginIdentityKind::Email,
         "Email login identity should be classified as email.");
+    passed &= Expect(email.Original == "ADMIN@PROJECTSKYFIRE.ORG",
+        "Email login identity should preserve the SRP identity string.");
     passed &= Expect(email.Canonical == "admin@projectskyfire.org",
         "Email login identity should be lower-case canonical form.");
 

@@ -25,11 +25,12 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_INS_ACCOUNT_AUTO_BANNED, "INSERT INTO account_banned VALUES (?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+?, 'Skyfire realmd', 'Failed login autoban', 1)", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_DEL_ACCOUNT_BANNED, "DELETE FROM account_banned WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_SEL_SESSIONKEY, "SELECT a.session_key, a.id, aa.gmlevel  FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE username = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_SESSIONKEY_BY_LOGIN_IDENTITY, "SELECT a.session_key, a.id, aa.gmlevel, a.username FROM account_login_identity i JOIN account a ON a.id = i.account_id LEFT JOIN account_access aa ON (a.id = aa.id) WHERE i.identity_type = 1 AND i.identity_canonical = ? AND (LOWER(TRIM(a.email)) = ? OR LOWER(TRIM(a.reg_mail)) = ?) ORDER BY a.id LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_LOGON, "UPDATE account SET salt = ?, verifier = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_LOGONPROOF, "UPDATE account SET session_key = ?, last_ip = ?, last_login = NOW(), locale = ?, failed_logins = 0, os = ? WHERE username = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_LOGONPROOF_BY_ID, "UPDATE account SET session_key = ?, last_ip = ?, last_login = NOW(), locale = ?, failed_logins = 0, os = ? WHERE id = ?", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_LOGONCHALLENGE, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, a.salt, a.verifier, a.token_key, a.username FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE a.username = ?", CONNECTION_SYNCH);
-    PrepareStatement(LOGIN_SEL_LOGONCHALLENGE_BY_EMAIL, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, a.salt, a.verifier, a.token_key, a.username FROM account a LEFT JOIN account_access aa ON (a.id = aa.id) WHERE LOWER(TRIM(a.email)) = ? OR LOWER(TRIM(a.reg_mail)) = ? ORDER BY a.id LIMIT 1", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_SEL_LOGONCHALLENGE_BY_LOGIN_IDENTITY, "SELECT a.id, a.locked, a.lock_country, a.last_ip, aa.gmlevel, i.salt, i.verifier, a.token_key, a.username FROM account_login_identity i JOIN account a ON a.id = i.account_id LEFT JOIN account_access aa ON (a.id = aa.id) WHERE i.identity_type = 1 AND i.identity_canonical = ? AND (LOWER(TRIM(a.email)) = ? OR LOWER(TRIM(a.reg_mail)) = ?) ORDER BY a.id LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_LOGON_COUNTRY, "SELECT country FROM ip2nation WHERE ip < ? ORDER BY ip DESC LIMIT 0,1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_FAILEDLOGINS, "UPDATE account SET failed_logins = failed_logins + 1 WHERE username = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_FAILEDLOGINS_BY_ID, "UPDATE account SET failed_logins = failed_logins + 1 WHERE id = ?", CONNECTION_ASYNC);
@@ -60,6 +61,9 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_UPD_USERNAME, "UPDATE account SET username = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_EMAIL, "UPDATE account SET email = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_REG_EMAIL, "UPDATE account SET reg_mail = ? WHERE id = ?", CONNECTION_ASYNC);
+    PrepareStatement(LOGIN_REP_ACCOUNT_LOGIN_IDENTITY, "INSERT INTO account_login_identity (account_id, identity_type, identity, identity_canonical, salt, verifier) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE account_id = VALUES(account_id), identity = VALUES(identity), salt = VALUES(salt), verifier = VALUES(verifier), updated_at = CURRENT_TIMESTAMP", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_DEL_ACCOUNT_LOGIN_IDENTITIES, "DELETE FROM account_login_identity WHERE account_id = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_DEL_ACCOUNT_EMAIL_LOGIN_IDENTITIES, "DELETE FROM account_login_identity WHERE account_id = ? AND identity_type = 1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_UPD_MUTE_TIME, "UPDATE account SET mutetime = ? , mutereason = ? , muteby = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_MUTE_TIME_LOGIN, "UPDATE account SET mutetime = ? WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(LOGIN_UPD_LAST_IP, "UPDATE account SET last_ip = ? WHERE username = ?", CONNECTION_ASYNC);
@@ -89,6 +93,7 @@ void LoginDatabaseConnection::DoPrepareStatements()
     PrepareStatement(LOGIN_SEL_IP2NATION_COUNTRY, "SELECT c.country FROM ip2nationcountries c, ip2nation i WHERE i.ip < ? AND c.code = i.country ORDER BY i.ip DESC LIMIT 0,1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_SEL_AUTOBROADCAST, "SELECT id, weight, text FROM autobroadcast WHERE realmid = ? OR realmid = -1", CONNECTION_SYNCH);
     PrepareStatement(LOGIN_GET_EMAIL_BY_ID, "SELECT email FROM account WHERE id = ?", CONNECTION_SYNCH);
+    PrepareStatement(LOGIN_GET_EMAILS_BY_ID, "SELECT email, reg_mail FROM account WHERE id = ?", CONNECTION_SYNCH);
 
     PrepareStatement(LOGIN_SEL_ACCOUNT_ACCESS_BY_ID, "SELECT gmlevel, RealmID FROM account_access WHERE id = ? and (RealmID = ? OR RealmID = -1) ORDER BY gmlevel desc", CONNECTION_SYNCH);
 

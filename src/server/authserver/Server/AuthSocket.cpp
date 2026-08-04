@@ -311,9 +311,10 @@ bool AuthSocket::_HandleLogonChallenge()
         // No SQL injection (prepared statement)
         if (loginIdentity.Kind == Skyfire::Auth::LoginIdentityKind::Email)
         {
-            stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_LOGONCHALLENGE_BY_EMAIL);
+            stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_LOGONCHALLENGE_BY_LOGIN_IDENTITY);
             stmt->setString(0, loginIdentity.Canonical);
             stmt->setString(1, loginIdentity.Canonical);
+            stmt->setString(2, loginIdentity.Canonical);
         }
         else
         {
@@ -674,10 +675,25 @@ bool AuthSocket::_HandleReconnectChallenge()
     SF_LOG_DEBUG("server.authserver", "[ReconnectChallenge] name(%d): '%s'", ch->I_len, ch->I);
 
     _login = (const char*)ch->I;
+    _accountId = 0;
+    _accountName.clear();
     socket().SetPacketLogAccountName(_login);
 
-    PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_SESSIONKEY);
-    stmt->setString(0, _login);
+    Skyfire::Auth::LoginIdentity const loginIdentity = Skyfire::Auth::NormalizeLoginIdentity(_login);
+    PreparedStatement* stmt = nullptr;
+    if (loginIdentity.Kind == Skyfire::Auth::LoginIdentityKind::Email)
+    {
+        stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_SESSIONKEY_BY_LOGIN_IDENTITY);
+        stmt->setString(0, loginIdentity.Canonical);
+        stmt->setString(1, loginIdentity.Canonical);
+        stmt->setString(2, loginIdentity.Canonical);
+    }
+    else
+    {
+        stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_SESSIONKEY);
+        stmt->setString(0, _login);
+    }
+
     PreparedQueryResult result = LoginDatabase.Query(stmt);
 
     // Stop if the account is not found
@@ -703,6 +719,12 @@ bool AuthSocket::_HandleReconnectChallenge()
     std::reverse(_os.begin(), _os.end());
 
     Field* fields = result->Fetch();
+    _accountId = fields[1].GetUInt32();
+    if (loginIdentity.Kind == Skyfire::Auth::LoginIdentityKind::Email)
+        _accountName = fields[3].GetString();
+    else
+        _accountName = _login;
+
     AccountTypes secLevel = AccountTypes(fields[2].GetUInt8());
     _accountSecurityLevel = secLevel <= AccountTypes::SEC_ADMINISTRATOR ?
         AccountTypes(secLevel) : AccountTypes::SEC_ADMINISTRATOR;
@@ -795,20 +817,26 @@ bool AuthSocket::_HandleRealmList()
 
     // Get the user id (else close the connection)
     // No SQL injection (prepared statement)
-    PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_ACCOUNT_ID_BY_NAME);
-    stmt->setString(0, _login);
-    PreparedQueryResult result = LoginDatabase.Query(stmt);
-    if (!result)
+    uint32 id = _accountId;
+    PreparedStatement* stmt = nullptr;
+    PreparedQueryResult result;
+    if (!id)
     {
-        SF_LOG_ERROR("server.authserver",
-            "'%s:%d' [ERROR] user %s tried to login but we cannot find him in the database.",
-            socket().getRemoteAddress().c_str(), socket().getRemotePort(), _login.c_str());
-        socket().Close();
-        return false;
-    }
+        stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_ACCOUNT_ID_BY_NAME);
+        stmt->setString(0, _login);
+        result = LoginDatabase.Query(stmt);
+        if (!result)
+        {
+            SF_LOG_ERROR("server.authserver",
+                "'%s:%d' [ERROR] user %s tried to login but we cannot find him in the database.",
+                socket().getRemoteAddress().c_str(), socket().getRemotePort(), _login.c_str());
+            socket().Close();
+            return false;
+        }
 
-    Field* fields = result->Fetch();
-    uint32 id = fields[0].GetUInt32();
+        Field* fields = result->Fetch();
+        id = fields[0].GetUInt32();
+    }
 
     // Update realm list if need
     sRealmList->UpdateIfNeed();

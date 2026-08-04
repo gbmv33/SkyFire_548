@@ -61,6 +61,38 @@ LOCK TABLES `account` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `account_login_identity`
+--
+
+DROP TABLE IF EXISTS `account_login_identity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `account_login_identity` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` int unsigned NOT NULL,
+  `identity_type` tinyint unsigned NOT NULL COMMENT '0 legacy username, 1 email',
+  `identity` varchar(255) NOT NULL DEFAULT '',
+  `identity_canonical` varchar(255) NOT NULL DEFAULT '',
+  `salt` binary(32) NOT NULL,
+  `verifier` binary(32) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_account_login_identity_canonical` (`identity_type`,`identity_canonical`),
+  KEY `idx_account_login_identity_account` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='Account login SRP identities';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `account_login_identity`
+--
+
+LOCK TABLES `account_login_identity` WRITE;
+/*!40000 ALTER TABLE `account_login_identity` DISABLE KEYS */;
+/*!40000 ALTER TABLE `account_login_identity` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `account_access`
 --
 
