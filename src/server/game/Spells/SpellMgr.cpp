@@ -3568,6 +3568,20 @@ void SpellMgr::LoadSpellInfoCorrections()
             case 108055: // Remove Weapon
                 spellInfo->Effects[EFFECT_1].TargetA = SpellImplicitTargetInfo(TARGET_UNIT_CASTER);
                 break;
+            // Revealing Strike: EFFECT_2 is Dummy in DBC; convert to taken-damage mod so
+            // Eviscerate / Rupture / Crimson Tempest gain the 35% finisher efficiency.
+            case 84617:
+                spellInfo->Effects[EFFECT_2].ApplyAuraName = SPELL_AURA_MOD_DAMAGE_FROM_CASTER;
+                spellInfo->Effects[EFFECT_2].SpellClassMask = flag128(0x920000, 0, 0x2000, 0);
+                break;
+            // Sanguinary Vein: EFFECT_1 is a broken PROC_TRIGGER_SPELL; bleed scripts apply 124271.
+            case 79147:
+                spellInfo->Effects[EFFECT_1].Effect = 0;
+                break;
+            // Burst of Speed: usable in stealth; DBC only has DISPEL_AURAS_ON_IMMUNITY.
+            case 108212:
+                spellInfo->AttributesEx |= SPELL_ATTR1_NOT_BREAK_STEALTH;
+                break;
             // Shattering Throw / Shattering Blow damage spells: pierce invulnerability so
             // spell_warr_shattering_throw can strip Ice Block/Divine Shield then deal damage.
             // Linked missiles 64380/65941 already have these attrs in DBC.
