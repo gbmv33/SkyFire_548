@@ -116,6 +116,14 @@ target_include_directories(login_identity_tests PRIVATE
 
 add_test(NAME login_identity_tests COMMAND login_identity_tests)
 
+add_executable(world_auth_identity_tests
+  WorldAuthIdentityTests.cpp
+)
+
+target_compile_definitions(world_auth_identity_tests PRIVATE SKYFIRE_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}\")
+
+add_test(NAME world_auth_identity_tests COMMAND world_auth_identity_tests)
+
 add_executable(network_address_tests
   ${CMAKE_SOURCE_DIR}/src/server/shared/Utilities/NetworkAddress.cpp
   NetworkAddressTests.cpp
