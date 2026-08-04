@@ -116,6 +116,17 @@ target_include_directories(login_identity_tests PRIVATE
 
 add_test(NAME login_identity_tests COMMAND login_identity_tests)
 
+add_executable(account_data_utils_tests
+  ${CMAKE_SOURCE_DIR}/src/server/shared/Utilities/AccountDataUtils.cpp
+  AccountDataUtilsTests.cpp
+)
+
+target_include_directories(account_data_utils_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/server/shared/Utilities
+)
+
+add_test(NAME account_data_utils_tests COMMAND account_data_utils_tests)
+
 add_executable(world_auth_identity_tests
   WorldAuthIdentityTests.cpp
 )
