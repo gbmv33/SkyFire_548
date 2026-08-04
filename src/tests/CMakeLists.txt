@@ -103,6 +103,19 @@ target_include_directories(auth_patch_transfer_tests PRIVATE
 
 add_test(NAME auth_patch_transfer_tests COMMAND auth_patch_transfer_tests)
 
+add_executable(login_identity_tests
+  ${CMAKE_SOURCE_DIR}/src/server/shared/Auth/LoginIdentity.cpp
+  LoginIdentityTests.cpp
+)
+
+target_include_directories(login_identity_tests PRIVATE
+  ${CMAKE_BINARY_DIR}
+  ${CMAKE_SOURCE_DIR}/src/server/shared
+  ${CMAKE_SOURCE_DIR}/src/server/shared/Auth
+)
+
+add_test(NAME login_identity_tests COMMAND login_identity_tests)
+
 add_executable(network_address_tests
   ${CMAKE_SOURCE_DIR}/src/server/shared/Utilities/NetworkAddress.cpp
   NetworkAddressTests.cpp

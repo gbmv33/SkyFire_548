@@ -14,6 +14,7 @@
 #include "CryptoHash.h"
 #include "Configuration/Config.h"
 #include "Database/DatabaseEnv.h"
+#include "LoginIdentity.h"
 #include "Log.h"
 #include "NetworkAddress.h"
 #include "openssl/crypto.h"
@@ -269,6 +270,10 @@ bool AuthSocket::_HandleLogonChallenge()
     ByteBuffer pkt;
 
     _login = (const char*)ch->I;
+    Skyfire::Auth::LoginIdentity const loginIdentity = Skyfire::Auth::NormalizeLoginIdentity(_login);
+    SF_LOG_DEBUG("server.authserver", "[AuthChallenge] login identity kind: %s",
+        Skyfire::Auth::GetLoginIdentityKindName(loginIdentity.Kind));
+
     socket().SetPacketLogAccountName(_login);
     _build = ch->build;
     _expversion = uint8(AuthHelper::IsPostBCAcceptedClientBuild(_build) ? POST_BC_EXP_FLAG :
