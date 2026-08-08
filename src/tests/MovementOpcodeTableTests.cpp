@@ -19,7 +19,13 @@ namespace
         std::ifstream file(std::string(SKYFIRE_SOURCE_DIR) + "/" + relativePath, std::ios::in | std::ios::binary);
         std::ostringstream stream;
         stream << file.rdbuf();
-        return stream.str();
+        std::string text = stream.str();
+        std::string::size_type pos = 0;
+        while ((pos = text.find("\r\n", pos)) != std::string::npos)
+            text.replace(pos, 2, "\n");
+        while ((pos = text.find('\r')) != std::string::npos)
+            text.replace(pos, 1, "\n");
+        return text;
     }
 
     bool Expect(bool condition, char const* message)
@@ -65,11 +71,32 @@ namespace
 
         return passed;
     }
+
+    bool TestCollisionHeightUpdateOpcodeMapping()
+    {
+        std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
+        std::string const movementSource = ReadFile("src/server/game/Movement/MovementStructures.cpp");
+        std::string const playerSource = ReadFile("src/server/game/Entities/Player/Player.cpp");
+
+        bool passed = true;
+        passed &= Expect(Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_UPDATE_COLLISION_HEIGHT,                   0x1812, STATUS_NEVER"),
+            "Collision height update packet should be enabled for movement broadcasts");
+        passed &= Expect(Contains(movementSource,
+            "case SMSG_MOVE_UPDATE_COLLISION_HEIGHT:\n            return MovementUpdateCollisionHeight;"),
+            "Collision height update packet should have a movement sequence");
+        passed &= Expect(Contains(playerSource,
+            "SMSG_MOVE_SET_COLLISION_HEIGHT, SMSG_MOVE_UPDATE_COLLISION_HEIGHT"),
+            "Collision height updates should use the broadcast opcode from the player sender");
+
+        return passed;
+    }
 }
 
 int main()
 {
-    bool const passed = TestTransitionSwimFlyOpcodeMappings();
+    bool const passed = TestTransitionSwimFlyOpcodeMappings()
+        && TestCollisionHeightUpdateOpcodeMapping();
     std::cout << (passed ? "Movement opcode table tests passed" : "Movement opcode table tests failed") << std::endl;
     return passed ? 0 : 1;
 }
