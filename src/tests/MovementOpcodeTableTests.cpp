@@ -57,11 +57,11 @@ namespace
             "&WorldSession::HandleMoveSetCanTransitionBetweenSwimAndFlyAck"),
             "Transition swim/fly client ACK should have an explicit movement handler");
         passed &= Expect(Contains(opcodesSource,
-            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_SET_CAN_TRANSITION_BETWEEN_SWIM_AND_FLY,   0x0A03"),
-            "Transition swim/fly server set packet should use opcode 0x0A03");
-        passed &= Expect(!Contains(opcodesSource,
             "DEFINE_OPCODE_HANDLER(SMSG_MOVE_SET_CAN_TRANSITION_BETWEEN_SWIM_AND_FLY,   0x11DB"),
-            "Transition swim/fly server set packet should not use the client ACK opcode");
+            "Transition swim/fly server set packet should use opcode 0x11DB");
+        passed &= Expect(!Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_SET_CAN_TRANSITION_BETWEEN_SWIM_AND_FLY,   0x0A03"),
+            "Transition swim/fly server set packet should not use the stale opcode 0x0A03");
         passed &= Expect(Contains(movementSource,
             "case SMSG_MOVE_SET_CAN_TRANSITION_BETWEEN_SWIM_AND_FLY:\n            return MoveSetCanTransitionBetweenSwimAndFly;"),
             "Transition swim/fly server set packet should have a movement sequence");
