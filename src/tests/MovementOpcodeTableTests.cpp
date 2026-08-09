@@ -92,6 +92,24 @@ namespace
         return passed;
     }
 
+    bool TestCompoundStateOpcodeMapping()
+    {
+        std::string const opcodesHeader = ReadFile("src/server/game/Server/Protocol/Opcodes.h");
+        std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
+        std::string const movementSource = ReadFile("src/server/game/Movement/MovementStructures.cpp");
+
+        bool passed = true;
+        passed &= Expect(Contains(opcodesHeader, "SMSG_MOVE_SET_COMPOUND_STATE,"),
+            "Compound state movement packet should exist in the SMSG opcode enum");
+        passed &= Expect(Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_SET_COMPOUND_STATE,                        0x0061, STATUS_UNHANDLED"),
+            "Compound state movement packet should use opcode 0x0061 and remain unhandled until its payload is decoded");
+        passed &= Expect(!Contains(movementSource, "case SMSG_MOVE_SET_COMPOUND_STATE:"),
+            "Compound state movement packet should not resolve to a guessed movement sequence");
+
+        return passed;
+    }
+
     bool TestUpdateApplyMovementForceOpcodeMapping()
     {
         std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
@@ -203,6 +221,7 @@ int main()
 {
     bool const passed = TestTransitionSwimFlyOpcodeMappings()
         && TestCollisionHeightUpdateOpcodeMapping()
+        && TestCompoundStateOpcodeMapping()
         && TestUpdateApplyMovementForceOpcodeMapping()
         && TestUpdateRemoveMovementForceOpcodeMapping()
         && TestSplineMoveCollisionEnableOpcodeMapping()
