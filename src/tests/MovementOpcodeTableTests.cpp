@@ -91,12 +91,52 @@ namespace
 
         return passed;
     }
+
+    bool TestUpdateApplyMovementForceOpcodeMapping()
+    {
+        std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
+        std::string const movementSource = ReadFile("src/server/game/Movement/MovementStructures.cpp");
+        std::string const playerHeader = ReadFile("src/server/game/Entities/Player/Player.h");
+        std::string const playerSource = ReadFile("src/server/game/Entities/Player/Player.cpp");
+
+        bool passed = true;
+        passed &= Expect(Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_UPDATE_APPLY_MOVEMENT_FORCE,               0x0AB6, STATUS_NEVER"),
+            "Update apply movement force packet should be enabled for movement broadcasts");
+        passed &= Expect(Contains(movementSource,
+            "MovementStatusElements const MovementUpdateApplyMovementForce[]"),
+            "Update apply movement force packet should have a movement sequence");
+        passed &= Expect(Contains(movementSource,
+            "case SMSG_MOVE_UPDATE_APPLY_MOVEMENT_FORCE:\n            return MovementUpdateApplyMovementForce;"),
+            "Update apply movement force packet should resolve to its movement sequence");
+        passed &= Expect(Contains(playerHeader,
+            "void SendApplyMovementForce(bool apply, Position const& source, float force = 0.0f);"),
+            "Player should expose a movement-force send helper");
+        passed &= Expect(Contains(playerHeader,
+            "bool HasForcedMovement() const { return hasForcedMovement_; }"),
+            "Player should expose active movement-force state");
+        passed &= Expect(Contains(playerHeader,
+            "bool hasForcedMovement_;"),
+            "Player should store active movement-force state");
+        passed &= Expect(Contains(playerSource,
+            "hasForcedMovement_ = false;"),
+            "Player should initialize movement-force state");
+        passed &= Expect(Contains(playerSource,
+            "WorldPacket data(SMSG_MOVE_APPLY_MOVEMENT_FORCE"),
+            "Movement-force helper should send the direct apply packet to the controlled player");
+        passed &= Expect(Contains(playerSource,
+            "SMSG_MOVE_UPDATE_APPLY_MOVEMENT_FORCE"),
+            "Movement-force helper should broadcast the update apply packet to observers");
+
+        return passed;
+    }
 }
 
 int main()
 {
     bool const passed = TestTransitionSwimFlyOpcodeMappings()
-        && TestCollisionHeightUpdateOpcodeMapping();
+        && TestCollisionHeightUpdateOpcodeMapping()
+        && TestUpdateApplyMovementForceOpcodeMapping();
     std::cout << (passed ? "Movement opcode table tests passed" : "Movement opcode table tests failed") << std::endl;
     return passed ? 0 : 1;
 }
