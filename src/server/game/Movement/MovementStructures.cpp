@@ -5825,6 +5825,27 @@ MovementStatusElements const SplineMoveGravityEnable[] = // 5.4.8 18414
     MSEEnd,
 };
 
+MovementStatusElements const SplineMoveCollisionEnable[] = // 5.4.8 18414
+{
+    MSEHasGuidByte5,
+    MSEHasGuidByte7,
+    MSEHasGuidByte4,
+    MSEHasGuidByte2,
+    MSEHasGuidByte3,
+    MSEHasGuidByte6,
+    MSEHasGuidByte1,
+    MSEHasGuidByte0,
+    MSEGuidByte6,
+    MSEGuidByte3,
+    MSEGuidByte2,
+    MSEGuidByte4,
+    MSEGuidByte1,
+    MSEGuidByte5,
+    MSEGuidByte7,
+    MSEGuidByte0,
+    MSEEnd,
+};
+
 MovementStatusElements const SplineMoveSetHover[] = // 5.4.8 18414
 {
     MSEHasGuidByte6,
@@ -6951,6 +6972,8 @@ MovementStatusElements const* GetMovementStatusElementsSequence(Opcodes opcode)
             return SplineMoveSetWalkMode;
         case SMSG_SPLINE_MOVE_SET_RUN_MODE:
             return SplineMoveSetRunMode;
+        case SMSG_SPLINE_MOVE_COLLISION_ENABLE:
+            return SplineMoveCollisionEnable;
         case SMSG_SPLINE_MOVE_GRAVITY_DISABLE:
             return SplineMoveGravityDisable;
         case SMSG_SPLINE_MOVE_GRAVITY_ENABLE:

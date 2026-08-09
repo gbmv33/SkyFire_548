@@ -153,6 +153,28 @@ namespace
 
         return passed;
     }
+
+    bool TestSplineMoveCollisionEnableOpcodeMapping()
+    {
+        std::string const opcodesHeader = ReadFile("src/server/game/Server/Protocol/Opcodes.h");
+        std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
+        std::string const movementSource = ReadFile("src/server/game/Movement/MovementStructures.cpp");
+
+        bool passed = true;
+        passed &= Expect(Contains(opcodesHeader, "SMSG_SPLINE_MOVE_COLLISION_ENABLE,"),
+            "Spline move collision enable packet should exist in the SMSG opcode enum");
+        passed &= Expect(Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_SPLINE_MOVE_COLLISION_ENABLE,                   0x1826, STATUS_NEVER"),
+            "Spline move collision enable packet should use opcode 0x1826");
+        passed &= Expect(Contains(movementSource,
+            "MovementStatusElements const SplineMoveCollisionEnable[]"),
+            "Spline move collision enable packet should have a movement sequence");
+        passed &= Expect(Contains(movementSource,
+            "case SMSG_SPLINE_MOVE_COLLISION_ENABLE:\n            return SplineMoveCollisionEnable;"),
+            "Spline move collision enable packet should resolve to its movement sequence");
+
+        return passed;
+    }
 }
 
 int main()
@@ -160,7 +182,8 @@ int main()
     bool const passed = TestTransitionSwimFlyOpcodeMappings()
         && TestCollisionHeightUpdateOpcodeMapping()
         && TestUpdateApplyMovementForceOpcodeMapping()
-        && TestUpdateRemoveMovementForceOpcodeMapping();
+        && TestUpdateRemoveMovementForceOpcodeMapping()
+        && TestSplineMoveCollisionEnableOpcodeMapping();
     std::cout << (passed ? "Movement opcode table tests passed" : "Movement opcode table tests failed") << std::endl;
     return passed ? 0 : 1;
 }
