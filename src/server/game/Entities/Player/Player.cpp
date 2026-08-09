@@ -23076,6 +23076,7 @@ void Player::SendApplyMovementForce(bool apply, Position const& source, float fo
         data.WriteByteSeq(playerGuid[2]);
 
         SendDirectMessage(&data);
+        Movement::PacketSender(this, NULL_OPCODE, NULL_OPCODE, SMSG_MOVE_UPDATE_REMOVE_MOVEMENT_FORCE).Send();
 
         hasForcedMovement_ = false;
     }

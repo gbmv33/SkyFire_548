@@ -130,13 +130,37 @@ namespace
 
         return passed;
     }
+
+    bool TestUpdateRemoveMovementForceOpcodeMapping()
+    {
+        std::string const opcodesSource = ReadFile("src/server/game/Server/Protocol/Opcodes.cpp");
+        std::string const movementSource = ReadFile("src/server/game/Movement/MovementStructures.cpp");
+        std::string const playerSource = ReadFile("src/server/game/Entities/Player/Player.cpp");
+
+        bool passed = true;
+        passed &= Expect(Contains(opcodesSource,
+            "DEFINE_OPCODE_HANDLER(SMSG_MOVE_UPDATE_REMOVE_MOVEMENT_FORCE,              0x1464, STATUS_NEVER"),
+            "Update remove movement force packet should be enabled for movement broadcasts");
+        passed &= Expect(Contains(movementSource,
+            "MovementStatusElements const MovementUpdateRemoveMovementForce[]"),
+            "Update remove movement force packet should have a movement sequence");
+        passed &= Expect(Contains(movementSource,
+            "case SMSG_MOVE_UPDATE_REMOVE_MOVEMENT_FORCE:\n            return MovementUpdateRemoveMovementForce;"),
+            "Update remove movement force packet should resolve to its movement sequence");
+        passed &= Expect(Contains(playerSource,
+            "SMSG_MOVE_UPDATE_REMOVE_MOVEMENT_FORCE"),
+            "Movement-force helper should broadcast remove updates to observers");
+
+        return passed;
+    }
 }
 
 int main()
 {
     bool const passed = TestTransitionSwimFlyOpcodeMappings()
         && TestCollisionHeightUpdateOpcodeMapping()
-        && TestUpdateApplyMovementForceOpcodeMapping();
+        && TestUpdateApplyMovementForceOpcodeMapping()
+        && TestUpdateRemoveMovementForceOpcodeMapping();
     std::cout << (passed ? "Movement opcode table tests passed" : "Movement opcode table tests failed") << std::endl;
     return passed ? 0 : 1;
 }
